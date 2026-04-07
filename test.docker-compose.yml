@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  web_test:
+    build: .
+    container_name: fastapi_test
+    command: uv run pytest --cov --cov-report=term-missing --cov-report=html
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=.
+    env_file:
+      - .env
+    depends_on:
+      - db_test
+
+  db_test:
+    image: postgres:15
+    container_name: postgres_test
+    env_file:
+      - .env
+    ports:
+      - "5433:5432"
+    environment:
+      # Use the variables from your .env
+      - POSTGRES_DB=${TEST_POSTGRES_DB}
+      - POSTGRES_USER=${TEST_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${TEST_POSTGRES_PASSWORD}

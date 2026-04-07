@@ -1,0 +1,19 @@
+fastapi>=0.132.0
+uvicorn[standard]>=0.41.0
+httpx>=0.28.1
+python-dotenv>=1.2.1
+
+# Database
+sqlalchemy>=2.0.46
+asyncpg>=0.31.0
+alembic>=1.18.4
+greenlet>=3.3.2
+
+# Redis
+redis>=5.0.0
+
+# OpenAI
+openai>=1.30.0
+
+# PDF
+pypdf>=5.0.0

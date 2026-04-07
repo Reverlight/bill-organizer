@@ -1,0 +1,4 @@
+.venv/
+.env
+todo.txt
+frontend/node_modules
