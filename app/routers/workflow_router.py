@@ -116,7 +116,7 @@ def llm_parse(text: str) -> dict:
 
 
 @task(log_prints=True)
-async def save_to_db(file_id: str, file_name: str, data: dict):
+async def save_receipt(file_id: str, file_name: str, data: dict):
     """Update receipt row with extracted data, set status to completed."""
     print(f"[DB] Saving results for {file_id}")
 
@@ -235,15 +235,13 @@ async def receipt_flow(file_id: str):
         file_type, file_bytes, file_name = download_from_google_drive(file_id)
         text = process_file(file_bytes, file_type)
         data = llm_parse(text)
-        await save_to_db(file_id, file_name, data)
+        await save_receipt(file_id, file_name, data)
         send_to_n8n(file_id, data)
     except Exception as e:
         logger.exception(f"[FLOW] Failed for {file_id}: {e}")
         await mark_failed(file_id, str(e))
         raise
 
-
-# --- endpoint ---
 
 
 @router.post("/receipts/process")

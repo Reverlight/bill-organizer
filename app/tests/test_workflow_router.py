@@ -51,7 +51,7 @@ async def get_receipt_by_file_id(session: AsyncSession, file_id: str) -> Receipt
 def patch_sessionmaker(async_db: AsyncSession):
     """
     Patch async_sessionmaker in workflow_router so all DB ops
-    (check_and_insert, save_to_db, mark_failed) use the test session.
+    (check_and_insert, save_receipt, mark_failed) use the test session.
     """
 
     @asynccontextmanager
