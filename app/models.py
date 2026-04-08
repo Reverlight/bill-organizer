@@ -1,19 +1,6 @@
 import datetime
-import enum
-
-from sqlalchemy import (
-    Boolean,
-    Date,
-    Enum,
-    ForeignKey,
-    Integer,
-    String,
-    Text,
-    Time,
-    func,
-)
+from sqlalchemy import String, Float, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
-
 from app.db import Base
 
 
@@ -25,24 +12,26 @@ class AuditMixin:
     )
 
 
-class Lead(Base, AuditMixin):
-    __tablename__ = "leads"
+class Receipt(AuditMixin, Base):
+    __tablename__ = "receipts"
 
-    full_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    email: Mapped[str] = mapped_column(String(100), nullable=False)
-    phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    company_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    company_size: Mapped[str] = mapped_column(String(50), nullable=False)
-    industry: Mapped[str] = mapped_column(String(50), nullable=False)
-    job_title: Mapped[str] = mapped_column(String(100), nullable=False)
-    current_situation: Mapped[str] = mapped_column(String(200), nullable=False)
-    looking_for: Mapped[str] = mapped_column(String(200), nullable=False)
-    budget: Mapped[str] = mapped_column(String(50), nullable=False)
-    timeline: Mapped[str] = mapped_column(String(50), nullable=False)
-    is_decision_maker: Mapped[str] = mapped_column(String(100), nullable=False)
-    project_description: Mapped[str] = mapped_column(Text, nullable=False)
-    how_heard: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    file_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    file_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    status: Mapped[str] = mapped_column(String, nullable=False, default="processing")
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    processed_at: Mapped[datetime.datetime | None] = mapped_column(nullable=True)
 
-    score: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    reasoning: Mapped[str | None] = mapped_column(Text, nullable=True)
-    is_hot: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # extracted fields
+    vendor: Mapped[str | None] = mapped_column(String, nullable=True)
+    date: Mapped[str | None] = mapped_column(String, nullable=True)
+    total: Mapped[float | None] = mapped_column(Float, nullable=True)
+    tax: Mapped[float | None] = mapped_column(Float, nullable=True)
+    discount: Mapped[float | None] = mapped_column(Float, nullable=True)
+    currency: Mapped[str | None] = mapped_column(String, nullable=True)
+    category: Mapped[str | None] = mapped_column(String, nullable=True)
+    payment_method: Mapped[str | None] = mapped_column(String, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)

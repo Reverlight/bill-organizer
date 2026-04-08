@@ -1,7 +1,5 @@
-import datetime
-
 from app.db import AsyncSession
-from app.models import MenuDocument
+from app.models import Receipt
 
 
 class AsyncBaseFactory:
@@ -11,7 +9,9 @@ class AsyncBaseFactory:
     @classmethod
     async def create(cls, session: AsyncSession, **kwargs):
         data = {**cls.defaults, **kwargs}
-        obj = cls.model(**data)
+        obj = cls.model()
+        for key, value in data.items():
+            setattr(obj, key, value)
         session.add(obj)
         await session.commit()
         await session.refresh(obj)
@@ -22,11 +22,9 @@ class AsyncBaseFactory:
         return [await cls.create(session, **kwargs) for _ in range(size)]
 
 
-
-
-# class MenuDocumentFactory(AsyncBaseFactory):
-#     model = MenuDocument
-#     defaults = {
-#         "filename": "menu.pdf",
-#         "extracted_text": "Margherita Pizza - $12\nCarbonara Pasta - $15",
-#     }
+class ReceiptFactory(AsyncBaseFactory):
+    model = Receipt
+    defaults = {
+        "file_id": "test-file-001",
+        "status": "processing",
+    }
