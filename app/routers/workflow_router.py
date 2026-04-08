@@ -1,6 +1,6 @@
 import io
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import instructor
 import pytesseract
@@ -18,7 +18,7 @@ from sqlalchemy import select
 from app import settings
 from app.db import async_sessionmaker
 from app.models import Receipt
-from app.schemas import ReceiptData
+from app.schemas import ProcessRequest, ReceiptData
 
 logger = logging.getLogger(__name__)
 
@@ -36,16 +36,26 @@ MIME_MAP = {
 
 # --- tasks ---
 
+import json
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+
+
+def get_drive_creds():
+    creds = Credentials.from_authorized_user_info(
+        settings.GOOGLE_SERVICE_ACCOUNT_JSON,
+        scopes=["https://www.googleapis.com/auth/drive.readonly"],
+    )
+    if creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+    return creds
 
 @task(log_prints=True)
 def download_from_google_drive(file_id: str) -> tuple[str, bytes, str]:
     """Download file from Google Drive by file_id. Returns (file_type, bytes, file_name)."""
     print(f"[DRIVE] Downloading file_id: {file_id}")
 
-    creds = service_account.Credentials.from_service_account_file(
-        settings.GOOGLE_SERVICE_ACCOUNT_JSON,
-        scopes=["https://www.googleapis.com/auth/drive.readonly"],
-    )
+    creds = get_drive_creds()
     service = build("drive", "v3", credentials=creds)
 
     meta = service.files().get(fileId=file_id, fields="name,mimeType").execute()
@@ -152,7 +162,7 @@ def send_to_n8n(file_id: str, data: dict):
     print(f"[N8N] Sending results for {file_id}")
 
     payload = {"file_id": file_id, **data}
-    resp = requests.post(settings.N8N_WEBHOOK_URL, json=payload, timeout=30)
+    resp = requests.post(settings.N8N_WEBHOOK, json=payload, timeout=30)
     resp.raise_for_status()
 
     print(f"[N8N] Sent, status {resp.status_code}")
@@ -199,11 +209,10 @@ async def mark_failed(file_id: str, error: str):
         logger.exception(f"[FLOW] Could not update failure status for {file_id}")
 
 
+PROCESSING_TIMEOUT = timedelta(minutes=2)
+
+
 async def check_and_insert(file_id: str) -> str | None:
-    """
-    Check if file_id already exists in db.
-    Returns status string if should skip, None if ready to process.
-    """
     async with async_sessionmaker() as session:
         result = await session.execute(
             select(Receipt).where(Receipt.file_id == file_id)
@@ -213,11 +222,18 @@ async def check_and_insert(file_id: str) -> str | None:
         if receipt:
             if receipt.status == "completed":
                 return "already_processed"
+
             if receipt.status == "processing":
-                return "already_processing"
-            # failed -> allow reprocessing
+                age = datetime.now(timezone.utc) - receipt.created_at
+                if age < PROCESSING_TIMEOUT:
+                    return "already_processing"
+                # stuck — treat as failed, allow reprocessing
+                logger.warning(f"[DUP] {file_id} stuck in processing for {age}, reprocessing")
+
+            # failed or stuck -> allow reprocessing
             receipt.status = "processing"
             receipt.error_message = None
+            receipt.updated_at = datetime.now(timezone.utc)
             await session.commit()
             return None
 
@@ -243,12 +259,38 @@ async def receipt_flow(file_id: str):
         raise
 
 
+import asyncio
 
 @router.post("/receipts/process")
-async def process_receipt(file_id: str, background_tasks: BackgroundTasks):
-    existing = await check_and_insert(file_id)
+async def process_receipt(request: ProcessRequest, background_tasks: BackgroundTasks):
+    existing = await check_and_insert(request.file_id)
     if existing:
         return {"status": existing}
 
-    background_tasks.add_task(receipt_flow, file_id)
+    asyncio.ensure_future(receipt_flow(request.file_id))
     return {"status": "processing"}
+
+
+@router.post("/receipts/test-webhook")
+async def test_webhook():
+    """Send test data to n8n webhook to verify the connection."""
+    import requests
+
+    test_data = {
+        "file_id": "test-001",
+        "vendor": "ACME GROCERY STORE",
+        "date": "2026-03-15",
+        "total": 11.31,
+        "tax": 0.84,
+        "discount": 1.00,
+        "currency": "USD",
+        "category": "groceries",
+        "payment_method": "Visa",
+        "notes": "Milk $3.99, Bread $2.49, Eggs $4.99, Discount -$1.00, Tax $0.84",
+    }
+    print(settings.N8N_WEBHOOK)
+    try:
+        resp = requests.post(settings.N8N_WEBHOOK, json=test_data, timeout=30)
+        return {"status": "sent", "n8n_status_code": resp.status_code, "data": test_data}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}

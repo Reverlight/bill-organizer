@@ -1,3 +1,4 @@
+import json
 import os
 from dotenv import load_dotenv
 
@@ -34,7 +35,7 @@ REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
 
 # --- OpenAI ---
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
 
 
 CORS_ORIGINS = [
@@ -43,3 +44,5 @@ CORS_ORIGINS = [
 ]
 
 HOT_LEAD_THRESHOLD = int(os.getenv("HOT_LEAD_THRESHOLD", "7"))
+GOOGLE_SERVICE_ACCOUNT_JSON = json.loads(os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON'))
+N8N_WEBHOOK = f'http://n8n:5678/webhook/8d8d32c2-c4e3-4253-b734-5ce8fa2ef7a9'

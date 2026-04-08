@@ -18,3 +18,5 @@ class ReceiptData(BaseModel):
     payment_method: Optional[str] = Field(None, description="Payment method (cash, card, etc.)")
     notes: Optional[str] = Field(None, description="Any additional relevant info from the receipt")
 
+class ProcessRequest(BaseModel):
+    file_id: str
