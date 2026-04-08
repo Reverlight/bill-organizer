@@ -44,7 +44,9 @@ def create_receipt_image() -> Image.Image:
 
     # use default font at readable size
     try:
-        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", 18)
+        font = ImageFont.truetype(
+            "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", 18
+        )
     except OSError:
         font = ImageFont.load_default()
 

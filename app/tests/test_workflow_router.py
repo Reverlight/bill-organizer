@@ -1,23 +1,17 @@
 from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, patch
 
-from app.factories import ReceiptFactory
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.factories import ReceiptFactory
 from app.models import Receipt
-from app.routers.workflow_router import (
-    check_and_insert,
-    mark_failed,
-    process_file,
-    process_image,
-    process_pdf,
-    process_text,
-    receipt_flow,
-)
-
+from app.routers.workflow_router import (check_and_insert, mark_failed,
+                                         process_file, process_image,
+                                         process_pdf, process_text,
+                                         receipt_flow)
 
 # --- mock data ---
 
@@ -38,9 +32,7 @@ MOCK_LLM_RESPONSE = {
 
 
 async def get_receipt_by_file_id(session: AsyncSession, file_id: str) -> Receipt | None:
-    result = await session.execute(
-        select(Receipt).where(Receipt.file_id == file_id)
-    )
+    result = await session.execute(select(Receipt).where(Receipt.file_id == file_id))
     return result.scalar_one_or_none()
 
 
@@ -211,9 +203,9 @@ class TestProcessReceiptEndpoint:
             new=AsyncMock(),
         ):
             response = response = await async_client.post(
-        "/api/workflows/receipts/process",
-        json={"file_id": "drive-001"},  # ← body, not params
-        )
+                "/api/workflows/receipts/process",
+                json={"file_id": "drive-001"},  # ← body, not params
+            )
 
         assert response.status_code == 200
         assert response.json()["status"] == "processing"
@@ -233,9 +225,9 @@ class TestProcessReceiptEndpoint:
             new=AsyncMock(),
         ) as mock_flow:
             response = response = await async_client.post(
-    "/api/workflows/receipts/process",
-    json={"file_id": "drive-002"},  # ← body, not params
-)
+                "/api/workflows/receipts/process",
+                json={"file_id": "drive-002"},  # ← body, not params
+            )
 
         assert response.status_code == 200
         assert response.json()["status"] == "already_processed"
@@ -252,9 +244,9 @@ class TestProcessReceiptEndpoint:
             new=AsyncMock(),
         ) as mock_flow:
             response = await async_client.post(
-    "/api/workflows/receipts/process",
-    json={"file_id": "drive-003"},  # ← body, not params
-)
+                "/api/workflows/receipts/process",
+                json={"file_id": "drive-003"},  # ← body, not params
+            )
 
         assert response.status_code == 200
         assert response.json()["status"] == "already_processing"
@@ -273,9 +265,9 @@ class TestProcessReceiptEndpoint:
             new=AsyncMock(),
         ):
             response = await async_client.post(
-    "/api/workflows/receipts/process",
-    json={"file_id": "drive-004"},  # ← body, not params
-)
+                "/api/workflows/receipts/process",
+                json={"file_id": "drive-004"},  # ← body, not params
+            )
 
         assert response.status_code == 200
         assert response.json()["status"] == "processing"

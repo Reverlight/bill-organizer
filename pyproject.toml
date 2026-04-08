@@ -33,3 +33,8 @@ dependencies = [
 # pyproject.toml
 [tool.coverage.run]
 omit = ["app/tests/*"]
+
+[dependency-groups]
+dev = [
+    "isort>=8.0.1",
+]

@@ -20,3 +20,5 @@ pylint:
 
 isort:
 	docker compose exec web uv run isort . --skip .venv --skip .venv-1
+black:
+	docker compose exec web uv run black app/

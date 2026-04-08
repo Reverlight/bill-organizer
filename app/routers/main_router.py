@@ -27,7 +27,7 @@ async def basic_api(
     ]
 """
 
+
 @router.get("")
-async def basic_api(
-) -> dict:
-    return {'result': 'API success'}
+async def basic_api() -> dict:
+    return {"result": "API success"}

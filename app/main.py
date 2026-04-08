@@ -5,10 +5,10 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 
 from app import settings
 from app.db import async_sessionmaker, engine
-from fastapi.middleware.cors import CORSMiddleware
 from app.routers.workflow_router import router as workflow_router
 
 logging.basicConfig(level=logging.INFO)

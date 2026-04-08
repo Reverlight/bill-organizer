@@ -12,7 +12,7 @@ from googleapiclient.http import MediaIoBaseDownload
 from openai import OpenAI
 from pdf2image import convert_from_bytes
 from PIL import Image
-from prefect import task, flow
+from prefect import flow, task
 from sqlalchemy import select
 
 from app import settings
@@ -37,8 +37,9 @@ MIME_MAP = {
 # --- tasks ---
 
 import json
-from google.oauth2.credentials import Credentials
+
 from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
 
 
 def get_drive_creds():
@@ -49,6 +50,7 @@ def get_drive_creds():
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())
     return creds
+
 
 @task(log_prints=True)
 def download_from_google_drive(file_id: str) -> tuple[str, bytes, str]:
@@ -73,7 +75,9 @@ def download_from_google_drive(file_id: str) -> tuple[str, bytes, str]:
     while not done:
         _, done = downloader.next_chunk()
 
-    print(f"[DRIVE] Downloaded {file_name} ({mime_type} -> {file_type}), {buffer.tell()} bytes")
+    print(
+        f"[DRIVE] Downloaded {file_name} ({mime_type} -> {file_type}), {buffer.tell()} bytes"
+    )
     return file_type, buffer.getvalue(), file_name
 
 
@@ -132,9 +136,8 @@ async def save_receipt(file_id: str, file_name: str, data: dict):
 
     async with async_sessionmaker() as session:
         receipt = await session.execute(
-    select(Receipt).where(Receipt.file_id == file_id)
-    
-)
+            select(Receipt).where(Receipt.file_id == file_id)
+        )
         receipt = receipt.scalar_one_or_none()
         if not receipt:
             raise ValueError(f"Receipt row not found for file_id: {file_id}")
@@ -228,7 +231,9 @@ async def check_and_insert(file_id: str) -> str | None:
                 if age < PROCESSING_TIMEOUT:
                     return "already_processing"
                 # stuck — treat as failed, allow reprocessing
-                logger.warning(f"[DUP] {file_id} stuck in processing for {age}, reprocessing")
+                logger.warning(
+                    f"[DUP] {file_id} stuck in processing for {age}, reprocessing"
+                )
 
             # failed or stuck -> allow reprocessing
             receipt.status = "processing"
@@ -261,6 +266,7 @@ async def receipt_flow(file_id: str):
 
 import asyncio
 
+
 @router.post("/receipts/process")
 async def process_receipt(request: ProcessRequest, background_tasks: BackgroundTasks):
     existing = await check_and_insert(request.file_id)
@@ -291,6 +297,10 @@ async def test_webhook():
     print(settings.N8N_WEBHOOK)
     try:
         resp = requests.post(settings.N8N_WEBHOOK, json=test_data, timeout=30)
-        return {"status": "sent", "n8n_status_code": resp.status_code, "data": test_data}
+        return {
+            "status": "sent",
+            "n8n_status_code": resp.status_code,
+            "data": test_data,
+        }
     except Exception as e:
         return {"status": "error", "message": str(e)}
