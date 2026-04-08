@@ -2,3 +2,6 @@
 .env
 todo.txt
 frontend/node_modules
+__pycache__/
+*.pyc
+*.pyo
