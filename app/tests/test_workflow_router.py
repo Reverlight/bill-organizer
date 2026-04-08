@@ -210,10 +210,10 @@ class TestProcessReceiptEndpoint:
             "app.routers.workflow_router.receipt_flow",
             new=AsyncMock(),
         ):
-            response = await async_client.post(
-                "/api/workflows/receipts/process",
-                params={"file_id": "drive-001"},
-            )
+            response = response = await async_client.post(
+        "/api/workflows/receipts/process",
+        json={"file_id": "drive-001"},  # ← body, not params
+        )
 
         assert response.status_code == 200
         assert response.json()["status"] == "processing"
@@ -232,10 +232,10 @@ class TestProcessReceiptEndpoint:
             "app.routers.workflow_router.receipt_flow",
             new=AsyncMock(),
         ) as mock_flow:
-            response = await async_client.post(
-                "/api/workflows/receipts/process",
-                params={"file_id": "drive-002"},
-            )
+            response = response = await async_client.post(
+    "/api/workflows/receipts/process",
+    json={"file_id": "drive-002"},  # ← body, not params
+)
 
         assert response.status_code == 200
         assert response.json()["status"] == "already_processed"
@@ -252,9 +252,9 @@ class TestProcessReceiptEndpoint:
             new=AsyncMock(),
         ) as mock_flow:
             response = await async_client.post(
-                "/api/workflows/receipts/process",
-                params={"file_id": "drive-003"},
-            )
+    "/api/workflows/receipts/process",
+    json={"file_id": "drive-003"},  # ← body, not params
+)
 
         assert response.status_code == 200
         assert response.json()["status"] == "already_processing"
@@ -273,9 +273,9 @@ class TestProcessReceiptEndpoint:
             new=AsyncMock(),
         ):
             response = await async_client.post(
-                "/api/workflows/receipts/process",
-                params={"file_id": "drive-004"},
-            )
+    "/api/workflows/receipts/process",
+    json={"file_id": "drive-004"},  # ← body, not params
+)
 
         assert response.status_code == 200
         assert response.json()["status"] == "processing"
