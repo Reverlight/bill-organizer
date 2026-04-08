@@ -3,8 +3,12 @@ from typing import AsyncGenerator
 
 import pytest_asyncio
 from sqlalchemy import DateTime, MetaData
-from sqlalchemy.ext.asyncio import (AsyncAttrs, AsyncSession,
-                                    async_sessionmaker, create_async_engine)
+from sqlalchemy.ext.asyncio import (
+    AsyncAttrs,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.orm import DeclarativeBase
 
 from app import settings

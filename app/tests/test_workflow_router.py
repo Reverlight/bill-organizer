@@ -8,10 +8,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.factories import ReceiptFactory
 from app.models import Receipt
-from app.routers.workflow_router import (check_and_insert, mark_failed,
-                                         process_file, process_image,
-                                         process_pdf, process_text,
-                                         receipt_flow)
+from app.routers.workflow_router import (
+    check_and_insert,
+    mark_failed,
+    process_file,
+    process_image,
+    process_pdf,
+    process_text,
+    receipt_flow,
+)
 
 # --- mock data ---
 
