@@ -1,7 +1,10 @@
 import io
 import logging
 from datetime import datetime, timedelta, timezone
+import json
 
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
 import instructor
 import pytesseract
 import requests
@@ -25,21 +28,12 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/workflows", tags=["receipts"])
 
 
-# --- mime type to file type mapping ---
 MIME_MAP = {
     "application/pdf": "pdf",
     "image/png": "image",
     "image/jpeg": "image",
     "text/plain": "text",
 }
-
-
-# --- tasks ---
-
-import json
-
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
 
 
 def get_drive_creds():

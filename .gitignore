@@ -3,5 +3,6 @@
 todo.txt
 frontend/node_modules
 __pycache__/
+app/routers/__pycache__
 *.pyc
 *.pyo
